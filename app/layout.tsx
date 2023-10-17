@@ -5,7 +5,7 @@ import { Theme } from "@radix-ui/themes";
 import { Poppins } from "next/font/google";
 import "swiper/swiper-bundle.css";
 import "swiper/css/pagination";
-import AuthProvider from "@/Provider";
+import AuthProvider from "@/context/AuthProvider";
 
 const poppins = Poppins({ weight: ["400"], subsets: ["latin"] });
 
