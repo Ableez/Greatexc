@@ -92,17 +92,23 @@ html {
 body {
   color: #979797 !important;
   /* font-size: 64.8% !important; */
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
 }
-
 
 button {
-  cursor: pointer !important;
-}
- 
-.metrics {
-  background: linear-gradient(92deg, rgba(255, 82, 144, 0.55) 8.61%, rgba(211, 0, 190, 0.35) 69.7%, rgba(255, 108, 1, 0.51) 97.84%);
+  cursor: pointer;
+  font-size: 80% !important;
 }
 
+.metrics {
+  background: linear-gradient(
+    92deg,
+    rgba(255, 82, 144, 0.55) 8.61%,
+    rgba(211, 0, 190, 0.35) 69.7%,
+    rgba(255, 108, 1, 0.51) 97.84%
+  );
+}
 
 #nprogress {
   pointer-events: none;
@@ -118,6 +124,14 @@ button {
   height: 2px;
 }
 
+@layer base {
+  .border-border {
+  }
+  .bg-background {
+  }
+  .text-foreground {
+  }
+}
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -126,6 +140,6 @@ input::-webkit-inner-spin-button {
 }
 
 /* Firefox */
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
 }

@@ -4,6 +4,8 @@ import { Text } from "@radix-ui/themes";
 import Image from "next/image";
 import Link from "next/link";
 import React, { BaseSyntheticEvent, useEffect, useState } from "react";
+import { redirect, useRouter } from "next/navigation";
+import { supabase } from "@/supabase/supabase";
 
 type Props = {};
 
@@ -11,10 +13,7 @@ const Register = (props: Props) => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    phoneNumber: "",
     password: "",
-    confirmPassword: "",
-    rememberMe: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,84 +29,64 @@ const Register = (props: Props) => {
       };
     });
   };
-
-  useEffect(() => {
-    if (
-      formData.password !== formData.confirmPassword &&
-      formData.password.length > 8 &&
-      formData.confirmPassword.length > 4
-    ) {
-      setError("Passwords do not match");
-
-      return;
-    }
-    if (formData.password === formData.confirmPassword) {
-      setError("");
-      return;
-    }
-
-    if (
-      formData.password.length > 8 &&
-      !formData.password.includes(`${/0-9/}`)
-    ) {
-      setError("Invalid password. password must be contain at least 1 number");
-      return;
-    }
-  }, [formData.password, formData.confirmPassword]);
+  const router = useRouter();
 
   const handleSubmit = async (e: BaseSyntheticEvent) => {
     e.preventDefault();
 
     setLoading(true);
-    if (
-      formData.username === "" ||
-      formData.email === "" ||
-      formData.password === "" ||
-      formData.confirmPassword === "" ||
-      formData.phoneNumber === ""
-    ) {
+    if (formData.email === "" || formData.password === "") {
       setError("All fields are required!");
       return;
     }
 
     try {
-      // old check if user exists method
-      // {
-      //   const userExists = await fetch("api/userExists", {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       email: formData.email,
-      //     }),
-      //   });
-
-      //   const userExistsData = userExists.json();
-      //   console.log(userExistsData, "userExists");
-      // }
-
-      const res = await fetch("api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          phoneNumber: formData.phoneNumber,
-        }),
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
       });
 
-      console.log(res.ok);
-      if (res.ok) {
-        setLoading(false);
+      console.log({ data, error });
+
+      // if (error) {
+      //   // error during sign up
+      //   setError(error.message);
+      //   console.log(error, "error during sign up");
+      //   setLoading(false);
+      // }
+
+      if (data) {
+        // all good, sign in user and direct to giftcards page
+        const { data: signin, error: signinErrr } =
+          await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+
+        if (signin) {
+          setLoading(false);
+          console.log("!!!!!!signed in");
+
+          redirect("/giftcards");
+        } else if (signinErrr) {
+          console.log("oh shit! error during login");
+        }
       }
     } catch (error) {
       console.log(error);
       setError("Error registering user");
       setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    let { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+    });
+    if (!error) {
+      redirect("/dashboard");
     }
   };
 
@@ -133,13 +112,12 @@ const Register = (props: Props) => {
               Set up an account
             </h1>
             {loading && "Loading..."}
-            <Text className="text-red-500 p-10 ">{error ? error : " "}</Text>
+            <Text className="text-red-500 p-6 ">{error ? error : " "}</Text>
             <form
               onSubmit={(e) => handleSubmit(e)}
               className="space-y-4 md:space-y-6"
-              action="#"
             >
-              <div>
+              {/* <div>
                 <label
                   htmlFor="username"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -157,13 +135,32 @@ const Register = (props: Props) => {
                   placeholder="praise"
                   required={true}
                 />
+              </div> */}
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  Your Username
+                </label>
+                <input
+                  onChange={(e) => {
+                    handleFormChange(e);
+                  }}
+                  type="username"
+                  name="username"
+                  id="username"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 text-md"
+                  placeholder="praise"
+                  required={true}
+                />
               </div>
               <div>
                 <label
                   htmlFor="email"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
-                  email
+                  Your Email
                 </label>
                 <input
                   onChange={(e) => {
@@ -177,7 +174,7 @@ const Register = (props: Props) => {
                   required={true}
                 />
               </div>
-              <div>
+              {/* <div>
                 <label
                   htmlFor="phoneNumber"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -195,7 +192,7 @@ const Register = (props: Props) => {
                   placeholder="0810 341 8286"
                   required={true}
                 />
-              </div>
+              </div> */}
               <div>
                 <label
                   htmlFor="password"
@@ -215,7 +212,7 @@ const Register = (props: Props) => {
                   required={true}
                 />
               </div>
-              <div>
+              {/* <div>
                 <label
                   htmlFor="confirmPassword"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -233,37 +230,19 @@ const Register = (props: Props) => {
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 text-md"
                   required={true}
                 />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      onChange={(e) => handleFormChange(e)}
-                      id="remember"
-                      aria-describedby="remember"
-                      type="checkbox"
-                      className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark dark:ring-offset-gray-800"
-                      required={false}
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
-                      htmlFor="remember"
-                      className="text-gray-500 dark:text-gray-300"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-                </div>
-              </div>
+              </div> */}
               <button
                 type="submit"
+                disabled={loading}
                 className="w-full text-white bg-pink-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 Sign Up
               </button>
               <button
-                onClick={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  loginWithGoogle();
+                }}
                 type="submit"
                 className="w-full text-neutral-700 bg-white border hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >

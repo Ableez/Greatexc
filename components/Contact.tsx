@@ -1,13 +1,8 @@
-
-
-import React from 'react'
+import Image from "next/image";
 import { Button } from "@radix-ui/themes";
-import Image from 'next/image';
+import React from "react";
 
-
-type Props = {}
-
-const Contact = (props: Props) => {
+const Contact = () => {
   return (
     <section className="bg-white text-left dark:bg-gray-900 py-16">
       <div className="grid max-w-screen-xl px-4 py-8 mx-auto lg:gap-8 xl:gap-0 lg:py-16 lg:grid-cols-12">
@@ -19,8 +14,11 @@ const Contact = (props: Props) => {
             Contact us through out 24/7 live chat. We&apos;re always happy to
             help
           </p>
-          <Button size={"3"} className="inline-flex items-center justify-center px-5 py-3 mr-3 text-base font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900">
-            Get started
+          <Button
+            size={"3"}
+            className="inline-flex items-center justify-center px-5 py-3 mr-3 text-base font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900"
+          >
+            Send us a message
             <svg
               className="w-5 h-5 ml-2 -mr-1"
               fill="currentColor"
@@ -47,6 +45,6 @@ const Contact = (props: Props) => {
       </div>
     </section>
   );
-}
+};
 
-export default Contact
+export default Contact;

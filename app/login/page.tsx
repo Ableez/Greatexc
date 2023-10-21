@@ -1,10 +1,13 @@
 "use client";
+import { auth, db, googleAuthProvider } from "@/lib/utils/firebase";
 import { Text } from "@radix-ui/themes";
-import { signIn } from "next-auth/react";
+import { signInWithEmailAndPassword, signInWithRedirect } from "firebase/auth";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { BaseSyntheticEvent, useState } from "react";
+import { redirect, useRouter } from "next/navigation";
+import React, { BaseSyntheticEvent, useEffect, useState } from "react";
+import { collection, doc, setDoc } from "firebase/firestore";
+import Cookies from "js-cookie";
 
 type Props = {};
 
@@ -15,7 +18,6 @@ const Login = (props: Props) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   const handleFormChange = (e: BaseSyntheticEvent) => {
     e.preventDefault();
@@ -28,34 +30,108 @@ const Login = (props: Props) => {
     });
   };
 
-  const handleSubmit = async (e: BaseSyntheticEvent) => {
-    e.preventDefault();
+  // submit
+  // const handleSubmit = async (e: BaseSyntheticEvent) => {
+  //   e.preventDefault();
 
-    if (formData.email === "" || formData.password === "") {
-      setError("All fields are required!");
-      return;
-    }
+  //   setLoading(true);
 
+  //   if (formData.email === "" || formData.password === "") {
+  //     setError("All fields are required!");
+  //     return;
+  //   }
+
+  //   try {
+  //     const { data, error } = await supabase.auth.signInWithPassword({
+  //       email: formData.email,
+  //       password: formData.password,
+  //     });
+
+  //     if (error) {
+  //       // error during sign in
+  //       setError(error.message);
+  //       setLoading(false);
+  //     }
+
+  //     if (data) {
+  //       // sign in successful
+  //       setLoading(false);
+  //       router.push("/dashboard");
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //     setError("Error registering user");
+  //     setLoading(false);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // const loginWithGoogle = async () => {
+  //   let { data, error } = await supabase.auth.signInWithOAuth({
+  //     provider: "google",
+  //   });
+
+  //   console.log("data", data);
+  //   console.log("error", error);
+  //   if (!error) {
+  //     redirect("/dashboard");
+  //   }
+  // };
+
+  const signInWithGoogle = async () => {
+    setLoading(true);
     try {
-      const res = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
+      const signIn = await signInWithRedirect(auth, googleAuthProvider);
 
-      if (res.error) {
-        setError("Invalid Credentials");
-        return;
-      }
+      const userDoc = doc(collection(db, "users"), auth.currentUser?.uid);
 
-      router.replace("dashboard");
+      const userData = {
+        ...formData,
+        uid: auth.currentUser?.uid,
+        photoUrl: auth.currentUser?.photoURL,
+      };
+
+      await setDoc(userDoc, userData);
+
+      // if (signIn) {
+      //   redirect("/giftcard");
+      //   setLoading(false);
+      // }
+
+      setLoading(false);
     } catch (error) {
       console.log(error);
+      setLoading(false);
+    }
+  };
+
+  const signInWithEmail = async () => {
+    setLoading(true);
+    try {
+      const signIn = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      const token = await signIn.user.getIdToken();
+
+      Cookies.set("authToken", token, { expires: 7 });
+      Cookies.set("uid", signIn.user.uid, { expires: 7 });
+
+      // if (signIn.user) {
+      //   redirect("/giftcard")
+      // }
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
     }
   };
 
   return (
-    <section className="bg-pink-100 text-left dark:bg-gray-900">
+    <section className="">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
         <Link
           href="#"
@@ -70,15 +146,14 @@ const Login = (props: Props) => {
           />
           Great Exchange
         </Link>
-        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-xl xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+        <div className="w-full rounded-lg shadow dark:border md:mt-0 sm:max-w-xl xl:p-0 dark:bg-gray-800 dark:border-gray-700">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
               Sign in to your account
             </h1>
-            {loading && "Loading..."}
             <Text className="text-red-500 p-10 ">{error ? error : " "}</Text>
             <form
-              onSubmit={(e) => handleSubmit(e)}
+              onSubmit={(e) => e.preventDefault()}
               className="space-y-4 md:space-y-6"
               action="#"
             >
@@ -149,13 +224,23 @@ const Login = (props: Props) => {
               </div>
               <button
                 type="submit"
-                className="w-full text-white bg-pink-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                onClick={(e) => {
+                  e.preventDefault();
+
+                  signInWithEmail();
+                }}
+                disabled={loading}
+                className="w-full text-white bg-pink-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 disabled:bg-pink-10"
               >
                 Login
               </button>
               <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  signInWithGoogle();
+                }}
+                disabled={loading}
                 type="button"
-                onClick={(e) => e.preventDefault()}
                 className="w-full text-neutral-700 bg-white border hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 Login with Google
