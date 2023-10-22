@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import { Poppins } from "next/font/google";
-import Script from "next/script";
-import { AuthProvider } from "@/lib/context/AuthProvider";
 import MotherLayout from "@/components/MotherLayout";
 
 const poppins = Poppins({ weight: ["400"], subsets: ["latin"] });
@@ -20,21 +18,16 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   return (
     <html lang="en">
       <body className={poppins.className}>
-        <Script src="../node_modules/flowbite/dist/flowbite.min.js"></Script>
-
         <Theme
           accentColor="crimson"
           grayColor="sand"
           radius="full"
           scaling="95%"
         >
-          <AuthProvider>
-            <MotherLayout>{children}</MotherLayout>
-          </AuthProvider>
+          <MotherLayout>{children}</MotherLayout>
         </Theme>
       </body>
     </html>

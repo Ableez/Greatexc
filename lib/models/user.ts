@@ -2,7 +2,7 @@ import mongoose, { Schema, models } from "mongoose";
 
 const userSchema = new Schema(
   {
-    name: {
+    username: {
       type: String,
       required: true,
     },
@@ -14,6 +14,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
+    photoURL: String,
   },
   { timestamps: true }
 );
